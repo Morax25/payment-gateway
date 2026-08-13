@@ -1,7 +1,8 @@
 import express from 'express'
 
 const app = express()
-
-app.listen(3001,()=>{
-    console.log("server is running on PORT : ",3001)
+app.get('/', async(req,res)=>{
+    return res.status(200).json({message:"server is up and running on port : 3000"})
 })
+
+export default app
