@@ -13,9 +13,6 @@ const app = express()
 app.use(express.json())
 app.use(urlencoded())
 app.use(cookieParser())
-app.get('/', async(req,res)=>{
-    throw new Error("unhandled error")
-})
 app.use('/api/auth',authRouter)
 app.use('/api/restaurant', restaurantRouter)
 app.use(errorHandler);
