@@ -1,9 +1,10 @@
 import express, { urlencoded } from 'express'
 import { config } from 'dotenv'
-import validate from './middlewares/validate.js'
-import { registerSchema } from './modules/auth/auth.validation.js'
+import { validate } from './middlewares/validate.js'
+import { registerSchema } from './modules/auth/auth.schema.js'
 import errorHandler from './middlewares/errorHandler.js'
-import authRouter  from './router/auth.routes.js'
+import authRouter from './modules/auth/auth.routes.js'
+import restaurantRouter from './modules/restaurant/restaurant.routes.js'
 import cookieParser from 'cookie-parser'
 config()
 
@@ -16,6 +17,7 @@ app.get('/', async(req,res)=>{
     throw new Error("unhandled error")
 })
 app.use('/api/auth',authRouter)
+app.use('/api/restaurant', restaurantRouter)
 app.use(errorHandler);
 
 export default app

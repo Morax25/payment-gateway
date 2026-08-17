@@ -13,15 +13,119 @@ enum Role {
   ADMIN
 }
 
+enum OrderStatus {
+  PENDING
+  CONFIRMED
+  PREPARING
+  READY
+  OUT_FOR_DELIVERY
+  DELIVERED
+  CANCELLED
+}
+
+enum DeliveryStatus {
+  ASSIGNED
+  PICKED_UP
+  OUT_FOR_DELIVERY
+  DELIVERED
+  FAILED
+}
+
 model User {
-  id           String   @id @default(uuid())
-  name         String   @db.VarChar(100)
-  email        String   @unique @db.VarChar(255)
-  passwordHash String   @db.VarChar(255)
-  refreshToken String?
-  role         Role     @default(CUSTOMER)
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  id                  String       @id @default(uuid())
+  name                String       @db.VarChar(100)
+  email               String       @unique @db.VarChar(255)
+  passwordHash        String       @db.VarChar(255)
+  refreshToken        String?
+  role                Role         @default(CUSTOMER)
+  restaurant          Restaurant[]
+  orders              Order[]
+  deliveries          Delivery[]
+  createdAt           DateTime     @default(now())
+  updatedAt           DateTime     @updatedAt
 
   @@map("users")
+}
+
+model Restaurant {
+  id                    String          @id @default(uuid())
+  name                  String          @db.VarChar(250)
+  description           String?
+  address               String
+  isOpen                Boolean         @default(true)
+
+  ownerId               String
+  owner                 User            @relation(fields: [ownerId], references: [id])
+
+  menuItems             MenuItem[]
+  orders                Order[]
+
+  createdAt             DateTime        @default(now())
+  updatedAt             DateTime        @updatedAt
+
+  @@map("restaurants")
+}
+
+model MenuItem {
+  id                String          @id @default(uuid())
+  name              String          @db.VarChar(150)
+  description       String?
+  price             Decimal         @db.Decimal(10, 2)
+  isAvailable       Boolean         @default(true)
+
+  restaurantId      String
+  restaurant        Restaurant      @relation(fields: [restaurantId], references: [id])
+
+  orderItems        OrderItem[]
+
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+
+  @@map("menu_items")
+}
+
+model Order {
+  id                  String              @id @default(uuid())
+  customerId          String
+  restaurantId        String
+  status              OrderStatus         @default(PENDING)
+  totalAmount         Decimal             @db.Decimal(10, 2)
+  customer            User                @relation(fields: [customerId], references: [id])
+  restaurant          Restaurant          @relation(fields: [restaurantId], references: [id])
+  items               OrderItem[]
+  delivery            Delivery?
+  createdAt           DateTime            @default(now())
+  updatedAt           DateTime            @updatedAt
+
+  @@map("orders")
+}
+
+model OrderItem {
+  id                  String               @id @default(uuid())
+  orderId             String
+  menuItemId          String
+  quantity            Int
+  price               Decimal              @db.Decimal(10, 2)
+
+  order               Order                @relation(fields: [orderId], references: [id])
+  menuItem            MenuItem             @relation(fields: [menuItemId], references: [id])
+
+  @@map("order_items")
+}
+
+model Delivery {
+  id                String              @id @default(ulid())
+  orderId           String              @unique
+  partnerId         String
+  status            DeliveryStatus      @default(ASSIGNED)
+  pickedUpAt        DateTime?
+  deliveredAt       DateTime?
+
+  order             Order               @relation(fields: [orderId], references: [id])
+  partner           User                @relation(fields: [partnerId], references: [id])
+
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
+
+  @@map("deliveries")
 }

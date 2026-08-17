@@ -8,7 +8,7 @@ export const registerUser = async (req, res) => {
   const { name, email, password } = req.body;
   const isExists = await prisma.user.findUnique({ where: { email: email } });
   if (isExists) {
-    throw new ApiError("User already exists");
+    throw new ApiError("User already exists", 409);
   }
   const passwordHash = await hashPassword(password);
   const user = await prisma.user.create({
@@ -92,15 +92,14 @@ export const refreshAccessToken = async (req, res) => {
 };
 
 export const logout = async (req, res) => {
-  const refreshToken = req.cookies.refreshToken;
-  if (refreshToken) {
-    await prisma.user.updateMany({
-      where: { refreshToken },
-      data: {
-        refreshToken: null,
-      },
-    });
-  }
+  await prisma.user.update({
+    where: {
+      id: req.user.id,
+    },
+    data: {
+      refreshToken: null,
+    },
+  });
   res.clearCookie("refreshToken", {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
@@ -111,14 +110,21 @@ export const logout = async (req, res) => {
   });
 };
 
-export const getProfile = async(req, res) => {
-  const userId = req.user.sub
-  const target = req.params.id
-  if(!target) throw new ApiError("params is required")
-    const user = await prisma.user.findUnique({where:{id:target},select:{
-      id:true, name:true, email:true, createdAt:true,
-    }})
-  if(!user) throw new ApiError("User does not exists")
-  return res.status(200).json({success:true, message:"data found successfully", data:user})
-}
-
+export const getProfile = async (req, res) => {
+  const userId = req.user.sub;
+  const target = req.params.id;
+  if (!target) throw new ApiError("params is required");
+  const user = await prisma.user.findUnique({
+    where: { id: target },
+    select: {
+      id: true,
+      name: true,
+      email: true,
+      createdAt: true,
+    },
+  });
+  if (!user) throw new ApiError("User does not exists");
+  return res
+    .status(200)
+    .json({ success: true, message: "data found successfully", data: user });
+};
