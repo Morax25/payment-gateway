@@ -106,3 +106,7 @@ export const updateRestuarant = asyncHandler(async (req, res) => {
       ),
     );
 });
+
+export const addMenu = asyncHandler(async(req,res)=>{
+  return res.status(201)
+})
