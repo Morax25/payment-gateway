@@ -49,7 +49,7 @@ Each module under `modules/` follows the same shape: `*.routes.js`, `*.controlle
 
 Four roles: `CUSTOMER`, `RESTAURANT_OWNER`, `DELIVERY_PARTNER`, `ADMIN`.
 
-- **User** — base account, tied to a role. Owners have restaurants, customers have orders, delivery partners have deliveries.
+- **User** — base account, tied to a role. Owners have restaurants, customers have orders, delivery partners   have deliveries.
 - **Restaurant** — owned by a `User` (`RESTAURANT_OWNER`), has an open/closed flag and a menu.
 - **MenuItem** — belongs to a restaurant, has price + availability toggle.
 - **Order** — placed by a customer against a restaurant, moves through a status pipeline.
