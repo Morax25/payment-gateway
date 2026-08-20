@@ -33,7 +33,6 @@ export const authorize = (...allowedRoles) => {
     if (!allowedRoles.includes(req.user.role)) {
       throw new ApiError("Forbidden", 403);
     }
-
     next();
   };
 };

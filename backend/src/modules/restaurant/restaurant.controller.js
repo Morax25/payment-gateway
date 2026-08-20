@@ -73,29 +73,35 @@ export const addRestaurant = asyncHandler(async (req, res) => {
 export const updateRestuarant = asyncHandler(async (req, res) => {
   const { id, name, description, address } = req.body;
   const ownerID = req.user.sub;
-  const isExists = await prisma.restaurant.findFirst({ where: { id: id } });
-  if (!isExists) {
-    throw new ApiError("Restaurant does not exists", 401);
+
+  let restaurant;
+  try {
+    restaurant = await prisma.restaurant.update({
+      where: {
+        id,
+        ownerId: ownerID,
+      },
+      data: { name, description, address },
+      select: {
+        id: true,
+        name: true,
+        address: true,
+        isOpen: true,
+        ownerId: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+    });
+  } catch (err) {
+    if (err.code === "P2025") {
+      throw new ApiError(
+        "Restaurant not found or you don't have permission to update it",
+        404,
+      );
+    }
+    throw err;
   }
-  const restaurant = await prisma.restaurant.update({
-    where: {
-      ownerId: ownerID,
-    },
-    data: {
-      name,
-      description,
-      address,
-    },
-    select: {
-      id: true,
-      name: true,
-      address: true,
-      isOpen: true,
-      ownerId: true,
-      createdAt: true,
-      updatedAt: true,
-    },
-  });
+
   return res
     .status(200)
     .json(
@@ -107,6 +113,81 @@ export const updateRestuarant = asyncHandler(async (req, res) => {
     );
 });
 
-export const addMenu = asyncHandler(async(req,res)=>{
-  return res.status(201)
-})
+export const getOwnRestaurants = asyncHandler(async (req, res) => {
+  const ownerID = req.user.sub;
+  const { page, limit, skip } = paginationParams(req.query);
+  const [restaurants, total] = await Promise.all([
+    prisma.restaurant.findMany({
+      where: { ownerId: ownerID },
+      skip,
+      take: limit,
+      orderBy: { createdAt: "desc" },
+      select: {
+        id: true,
+        name: true,
+        address: true,
+        isOpen: true,
+        createdAt: true,
+      },
+    }),
+    prisma.restaurant.count({ where: { ownerId: ownerID } }),
+  ]);
+
+  return res
+    .status(200)
+    .json(
+      new ApiResponse(
+        200,
+        { restaurants, total, page, limit },
+        "Your restaurants fetched successfully.",
+      ),
+    );
+});
+
+export const restaurantClosed = asyncHandler(async (req, res) => {
+  const { id, status } = req.body; // status: boolean (isOpen)
+  const ownerId = req.user.sub;
+  const restaurant = await prisma.restaurant.findFirst({
+    where: { id, ownerId },
+  });
+  if (!restaurant) {
+    throw new ApiError(
+      "Restaurant not found or you don't have permission",
+      404,
+    );
+  }
+  const updated = await prisma.restaurant.update({
+    where: { id },
+    data: { isOpen: status },
+    select: {
+      id: true,
+      name: true,
+      isOpen: true,
+      updatedAt: true,
+    },
+  });
+  return res
+    .status(200)
+    .json(
+      new ApiResponse(
+        200,
+        updated,
+        `Restaurant marked as ${updated.isOpen ? "open" : "closed"}.`,
+      ),
+    );
+});
+
+export const getRestaurantSingle = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const restaurant = await prisma.restaurant.findFirst({
+    where: { id },
+    select: {
+      id: true,
+      name: true,
+      isOpen: true,
+      updatedAt: true,
+    },
+  });
+  return res.status(200).json(new ApiResponse(200, restaurant, "Restaurant found"))
+});
+

@@ -6,6 +6,8 @@ import errorHandler from './middlewares/errorHandler.js'
 import authRouter from './modules/auth/auth.routes.js'
 import restaurantRouter from './modules/restaurant/restaurant.routes.js'
 import cookieParser from 'cookie-parser'
+import menuRouter from './modules/menu/menu.routes.js'
+import orderRouter from './modules/order/order.routes.js'
 config()
 
 const app = express()
@@ -15,6 +17,8 @@ app.use(urlencoded())
 app.use(cookieParser())
 app.use('/api/auth',authRouter)
 app.use('/api/restaurant', restaurantRouter)
+app.use('/api/menu',menuRouter)
+app.use('/api/order', orderRouter)
 app.use(errorHandler);
 
 export default app

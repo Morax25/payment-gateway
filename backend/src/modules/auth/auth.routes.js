@@ -8,7 +8,7 @@ const router = Router()
 router.post('/register', validate(registerSchema), registerUser)
 router.post('/login',validate(loginSchema),login)
 router.post('/refreshacesstoken', refreshAccessToken)
-router.get('/profile/:id', authenticate, authorize, getProfile)
+router.get('/profile/:id', authenticate, getProfile)
 router.get('/logout', authenticate, logout)
 
 export default router
